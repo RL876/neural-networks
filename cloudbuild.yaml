@@ -1,0 +1,26 @@
+steps:
+  # Build the container image
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/neural-networks-372810/neural-networks", "."]
+  # Push the container image to Container Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/neural-networks-372810/neural-networks"]
+  # Deploy container image to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      [
+        "run",
+        "deploy",
+        "neural-networks",
+        "--image",
+        "gcr.io/neural-networks-372810/neural-networks",
+        "--region",
+        "asia-east1",
+        "--platform",
+        "managed",
+        "--port",
+        "80",
+      ]
+images:
+  - gcr.io/neural-networks-372810/neural-networks
