@@ -2,6 +2,8 @@
 
 Neural networks demo by only using numpy to construct the structure.
 
+[Demo](https://neural-networks-riz6sqn55q-de.a.run.app)
+
 ---
 
 # Tutorial
