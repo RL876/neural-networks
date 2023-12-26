@@ -110,6 +110,12 @@ $$\sigma'(z)=\begin{cases}0.01,\quad if\ z<0\\
 1,\quad \quad \ if\ z\ge0
 \end{cases}$$
 
+* SoftMax
+
+$$\sigma(z)=\cfrac{e^{z}}{\sum{e^{z}}}=a$$
+
+$$\sigma'(z)=Y_{hat}-z$$
+
 ---
 
 # Loss Function
