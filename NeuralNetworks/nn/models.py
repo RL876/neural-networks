@@ -89,8 +89,8 @@ class Sequential(object):
                 y_hat = self.__forward(x_batch)
                 # batch loss, acc
                 batch_acc, batch_loss = self.__loss(y_hat, y_batch)
-                loss = loss + batch_acc
-                acc = acc + batch_loss
+                loss = loss + batch_loss
+                acc = acc + batch_acc
                 # sequence backward
                 dz = self.__backward(y_hat, y_batch)
                 # sequence update data
