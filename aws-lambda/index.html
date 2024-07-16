@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Doodle</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" />
+</head>
+
+<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script type="text/javascript">
+    var canvas, ctx, flag = false,
+        prevX = 0,
+        currX = 0,
+        prevY = 0,
+        currY = 0,
+        dot_flag = false;
+
+    var x = "black",
+        y = 7;
+
+    function init() {
+        canvas = document.getElementById("inputCanvas");
+        ctx = canvas.getContext("2d");
+        w = canvas.width;
+        h = canvas.height;
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, w, h);
+
+        canvas.addEventListener("pointermove", function (e) {
+            findxy("move", e)
+        }, false);
+        canvas.addEventListener("pointerdown", function (e) {
+            findxy("down", e)
+        }, false);
+        canvas.addEventListener("pointerup", function (e) {
+            findxy("up", e)
+        }, false);
+        canvas.addEventListener("pointerout", function (e) {
+            findxy("out", e)
+        }, false);
+    }
+
+    function color(obj) {
+        switch (obj.id) {
+            case "green":
+                x = "green";
+                break;
+            case "blue":
+                x = "blue";
+                break;
+            case "red":
+                x = "red";
+                break;
+            case "yellow":
+                x = "yellow";
+                break;
+            case "orange":
+                x = "orange";
+                break;
+            case "black":
+                x = "black";
+                break;
+            case "white":
+                x = "white";
+                break;
+        }
+        if (x == "white") y = 14;
+        else y = 7;
+
+    }
+
+    function draw() {
+        ctx.beginPath();
+        ctx.moveTo(prevX, prevY);
+        ctx.lineTo(currX, currY);
+        ctx.strokeStyle = x;
+        ctx.lineWidth = y;
+        ctx.stroke();
+        ctx.closePath();
+    }
+
+    function erase() {
+        var m = confirm("Confirm to clear.");
+        if (m) {
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, w, h);
+        }
+    }
+
+    function run() {
+        var dataURL = canvas.toDataURL();
+        $.post(
+            "/default/doodle",
+            { img: dataURL },
+            function (err, req, resp) {
+                window.location.href = "/default/doodle";
+            }
+        );
+        // $.post(
+        //     "/doodle",
+        //     { img: dataURL },
+        //     function (err, req, resp) {
+        //         window.location.href = "/doodle";
+        //     }
+        // );
+    }
+
+    function findxy(res, e) {
+        if (res == "down") {
+            prevX = currX;
+            prevY = currY;
+            currX = e.clientX - canvas.offsetLeft;
+            currY = e.clientY - canvas.offsetTop;
+
+            flag = true;
+            dot_flag = true;
+            if (dot_flag) {
+                ctx.beginPath();
+                ctx.fillStyle = x;
+                ctx.fillRect(currX, currY, 2, 2);
+                ctx.closePath();
+                dot_flag = false;
+            }
+        }
+        if (res == "up" || res == "out") {
+            flag = false;
+        }
+        if (res == "move") {
+            if (flag) {
+                prevX = currX;
+                prevY = currY;
+                currX = e.clientX - canvas.offsetLeft;
+                currY = e.clientY - canvas.offsetTop;
+                draw();
+            }
+        }
+    }
+</script>
+
+<style>
+    body {
+        width: 100%;
+        height: 100%;
+        overflow-y: hidden;
+        overflow-x: hidden; 
+        touch-action: none;
+        -webkit-overflow-scrolling: none;
+        overflow: hidden;
+        overscroll-behavior: none;
+        scroll: "no";
+    }
+    
+    #inputCanvas {
+        border: 2px solid rgb(102, 153, 255);
+    }
+
+    .color {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid;
+    }
+
+    #green {
+        background: green;
+    }
+
+    #blue {
+        background: blue;
+    }
+
+    #red {
+        background: red;
+    }
+
+    #yellow {
+        background: yellow;
+    }
+
+    #orange {
+        background: orange;
+    }
+
+    #black {
+        background: black;
+    }
+
+    #white {
+        background: white;
+    }
+
+    .btn {
+        background-color: rgb(102, 153, 255);
+    }
+</style>
+
+<body onload="init()">
+    <div id="content" class="container main-container">
+        <div class="text-center">
+            <h1>Doodle</h1>
+            <h4>{{ labels }}</h4>
+        </div>
+        <div class="text-center">
+            <canvas id="inputCanvas" width="280" height="280"></canvas>
+            <div class="text-center">
+                <div class="color" id="green" onclick="color(this)"></div>
+                <div class="color" id="blue" onclick="color(this)"></div>
+                <div class="color" id="red" onclick="color(this)"></div>
+                <div class="color" id="yellow" onclick="color(this)"></div>
+                <div class="color" id="orange" onclick="color(this)"></div>
+                <div class="color" id="black" onclick="color(this)"></div>
+                <div class="color" id="white" onclick="color(this)"></div>
+            </div>
+            <input type="button" class="btn btn-primary" value="run" id="btn" onclick="run()">
+            <input type="button" class="btn btn-primary" value="clear" id="clr" onclick="erase()">
+        </div>
+        <div class="row text-center">
+            <h4>Result : {{ result }}</h4>
+            {% for k, v in scores.items() %}
+            <h4>{{ k }} : {{ v }}</h4>
+            {% endfor %}
+        </div>
+        <div class="text-center">
+            <h5>Copyright &copy; Robert 2022</h5>
+        </div>
+    </div>
+</body>
+
+</html>

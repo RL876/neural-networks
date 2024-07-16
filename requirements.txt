@@ -1,0 +1,4 @@
+flask
+flask-ngrok
+h5py
+numpy
