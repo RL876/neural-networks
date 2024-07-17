@@ -2,6 +2,8 @@
 
 Neural networks demo by only using numpy to construct the structure.
 
+[Doodle Demo](https://e6vdifj1v0.execute-api.us-east-1.amazonaws.com/default/doodle)
+
 ---
 
 # Tutorial
@@ -18,7 +20,7 @@ pip3 install --force-reinstall git+https://github.com/RL876/neural-networks.git
 
 ### Doodle
 
-[Doodle](https://e6vdifj1v0.execute-api.us-east-1.amazonaws.com/default/doodle)
+[Doodle](https://console.cloud.google.com/storage/browser/quickdraw_dataset/sketchrnn;tab=objects?prefix=&forceOnObjectsSortingFiltering=false)
 
 [bicycle.npy](https://storage.cloud.google.com/quickdraw\_dataset/full/numpy\_bitmap/bicycle.npy)
 
