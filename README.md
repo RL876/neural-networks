@@ -18,7 +18,7 @@ pip3 install --force-reinstall git+https://github.com/RL876/neural-networks.git
 
 ### Doodle
 
-[Doodle](https://console.cloud.google.com/storage/browser/quickdraw\_dataset/full/numpy\_bitmap;tab=objects?prefix=&forceOnObjectsSortingFiltering=false&pli=1)
+[Doodle](https://e6vdifj1v0.execute-api.us-east-1.amazonaws.com/default/doodle)
 
 [bicycle.npy](https://storage.cloud.google.com/quickdraw\_dataset/full/numpy\_bitmap/bicycle.npy)
 
