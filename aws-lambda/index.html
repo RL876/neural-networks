@@ -103,13 +103,6 @@
                 window.location.href = "/default/doodle";
             }
         );
-        // $.post(
-        //     "/doodle",
-        //     { img: dataURL },
-        //     function (err, req, resp) {
-        //         window.location.href = "/doodle";
-        //     }
-        // );
     }
 
     function findxy(res, e) {
@@ -124,7 +117,7 @@
             if (dot_flag) {
                 ctx.beginPath();
                 ctx.fillStyle = x;
-                ctx.fillRect(currX, currY, 2, 2);
+                ctx.fillRect(currX, currY, 1, 1);
                 ctx.closePath();
                 dot_flag = false;
             }
