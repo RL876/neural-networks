@@ -27,9 +27,9 @@ def train():
         label = os.path.splitext(os.path.basename(fname))[0]
         data = np.load(fname)
         data = data.reshape(len(data), 28, 28, 1)
-        data = data[:10000]
+        data = data[:100000]
         x = np.append(x, data, axis=0)
-        y = np.append(y, np.repeat(label, 10000))
+        y = np.append(y, np.repeat(label, 100000))
     x = x / 255
     x = x.reshape(x.shape[0], np.prod(np.array(x.shape[1:])))
     # one hot encoding
@@ -52,10 +52,8 @@ def train():
     test_index = train_index + int(row * 0.09)
     X_train = x[:train_index]
     X_test = x[train_index:test_index]
-    X_val = x[test_index:]
     Y_train = y[:train_index]
     Y_test = y[train_index:test_index]
-    Y_val = y[test_index:]
     # activation
     def relu(z):
         return np.maximum(0, z)
@@ -71,19 +69,21 @@ def train():
         return y_hat - Y
     # hyperparameters
     lr = 1e-3
-    epochs = 100
-    batch_size = 8
+    epochs = 300
+    batch_size = 16
+    weight_scale = 1e-1
     # init w & b
-    W1 = np.random.randn(784, 128) * 0.1
-    b1 = np.random.randn(128) * 0.1
-    W2 = np.random.randn(128, 64) * 0.1
-    b2 = np.random.randn(64) * 0.1
-    W3 = np.random.randn(64, 3) * 0.1
-    b3 = np.random.randn(3) * 0.1
+    W1 = np.random.randn(784, 64) * weight_scale
+    b1 = np.random.randn(64) * weight_scale
+    W2 = np.random.randn(64, 16) * weight_scale
+    b2 = np.random.randn(16) * weight_scale
+    W3 = np.random.randn(16, 3) * weight_scale
+    b3 = np.random.randn(3) * weight_scale
     # batch
     batch_iteration = int(X_train.shape[0] / batch_size)
     batch_iteration = batch_iteration + 1 if X_train.shape[0] % batch_size > 0 else batch_iteration
     # start train
+    best_val_acc = np.load("model.npz")["val_acc"] if os.path.exists("model.npz") else 0
     for i in range(epochs):
         loss = acc = val_loss = val_acc = 0
         for j in range(batch_iteration):
@@ -131,10 +131,12 @@ def train():
         Y_hat = softmax(Z3)
         val_loss = np.average(np.square(Y_hat - Y_test) ** 0.5)
         val_acc = (np.argmax(Y_hat, axis=1) == np.argmax(Y_test, axis=1)).sum() / Y_test.shape[0]
+        # save best model
+        if val_acc > best_val_acc:
+            best_val_acc = val_acc
+            np.savez("model.npz", W1=W1, b1=b1, W2=W2, b2=b2, W3=W3, b3=b3, labels=labels, val_acc=best_val_acc)
         print("Epoch {: 5d}/{}\t- loss: {:.4f} - acc: {:.4f} - val_loss: {:.4f} - val_acc: {:.4f}".format(i+1, epochs, loss, acc, val_loss, val_acc))
-    # save model
-    np.savez("model.npz", W1=W1, b1=b1, W2=W2, b2=b2, W3=W3, b3=b3, labels=labels)
-    print("Training Complete")
+    print("Training Complete: val_acc = {:.4f}".format(best_val_acc))
 
 
 # load model
@@ -200,4 +202,4 @@ def lambda_handler(event, context):
 if __name__ == "__main__":
     args = parseArgs()
     train() if args.train else None
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)
