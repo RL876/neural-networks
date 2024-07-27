@@ -1,9 +1,11 @@
 import os
+import io
 import glob
 import awsgi
+import base64
 import argparse
 import numpy as np
-from urllib.request import urlopen
+from PIL import Image
 from flask import Flask, render_template, request
 
 
@@ -21,24 +23,22 @@ def parseArgs():
 
 def train():
     # load data
-    x = np.empty((0, 28, 28, 1), int)
+    x = np.empty((0, 784), int)
     y = np.empty((0), int)
     for fname in glob.glob(os.path.join("..", "dataset", "*.npy")):
         label = os.path.splitext(os.path.basename(fname))[0]
         data = np.load(fname)
-        data = data.reshape(len(data), 28, 28, 1)
         data = data[:100000]
         x = np.append(x, data, axis=0)
         y = np.append(y, np.repeat(label, 100000))
-    x = x / 255
-    x = x.reshape(x.shape[0], np.prod(np.array(x.shape[1:])))
+    x = np.where(x > 254, 1, 0)
     # one hot encoding
     labels = np.unique(y)
     labels.sort()
-    label_dict = dict()
+    labels_dict = dict()
     for value in labels:
         key = np.where(labels == value)[0][0]
-        label_dict[key] = str(value)
+        labels_dict[key] = str(value)
         y = np.where(y == value, key, y)
     y = y.astype(int)
     y = np.eye(len(np.unique(y)))[y].astype(int)
@@ -49,11 +49,10 @@ def train():
     x = x[randomize]
     y = y[randomize]
     train_index = int(row * 0.9)
-    test_index = train_index + int(row * 0.09)
     X_train = x[:train_index]
-    X_test = x[train_index:test_index]
+    X_test = x[train_index:]
     Y_train = y[:train_index]
-    Y_test = y[train_index:test_index]
+    Y_test = y[train_index:]
     # activation
     def relu(z):
         return np.maximum(0, z)
@@ -149,8 +148,8 @@ if model:
     b2 = model["b2"]
     W3 = model["W3"]
     b3 = model["b3"]
-    labels_dict = model["labels"]
-    labels = " / ".join(labels_dict)
+    labels_dict = {k: str(v) for k, v in enumerate(model["labels"])}
+    labels = " / ".join(labels_dict.values())
 def relu(z):
     return np.maximum(0, z)
 def softmax(z):
@@ -170,15 +169,12 @@ def index():
     try:
         if request.method == "POST":
             # get data
-            with urlopen(request.form["img"]) as response:
-                img = response.read()
-            img = np.frombuffer(img, np.uint8)
-            img = np.resize(np.array(img), (280, 280, 1))
-            img = img[:280, :280].reshape(28, 10, 28, 10).max(axis=(1, 3))
-            img = np.where(img > 254, 0, 1)
-            img = img.astype(np.int32)
-            img = img.reshape(np.prod(np.array(img.shape)))
-            img = np.expand_dims(img, axis=0)
+            img_bytes = base64.b64decode(request.form["img"].split("base64,")[1])
+            img = Image.open(io.BytesIO(img_bytes)).convert("L")
+            img = np.array(img).reshape(280, 280)
+            img = img[::10, ::10]
+            img = np.where(img > 254, 0, 1).astype(np.int32)
+            img = img.reshape((1, 784))
             # infer
             Z1 = np.dot(img, W1) + b1
             X1 = relu(Z1)
@@ -187,7 +183,7 @@ def index():
             Z3 = np.dot(X2, W3) + b3
             Y_hat = softmax(Z3)[0]
             RESULT = str(labels_dict[np.argmax(Y_hat)])
-            for i, label in enumerate(labels_dict):
+            for i, label in labels_dict.items():
                 SCORES[str(label)] = "{:.3f}".format(Y_hat[i])
             SCORES = dict(sorted(SCORES.items(), key=lambda item: item[1], reverse=True)[:3])
     except BaseException as e:
@@ -202,4 +198,4 @@ def lambda_handler(event, context):
 if __name__ == "__main__":
     args = parseArgs()
     train() if args.train else None
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000, debug=True)
